@@ -93,17 +93,3 @@ The script generates a JSON file (`getprog_candidates.json`) containing an array
 }
 ```
 
-## Future Improvements
-
-1. Enhance education field matching:
-   - Add support for more education keywords
-   - Implement fuzzy matching for degree variations
-   - Add support for multiple education entries
-   - Improve degree type detection
-
-2. Additional features:
-   - Add support for custom search criteria
-   - Implement rate limiting
-   - Add proxy support
-   - Improve error handling and recovery
-   - Add support for different output formats 
