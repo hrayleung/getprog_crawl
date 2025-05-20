@@ -37,6 +37,7 @@ The scraper extracts the following information for each candidate:
 The current implementation has limited education field matching capabilities:
 
 1. Only matches basic education keywords:
+
    - "University"
    - "College"
    - "Bachelor"
@@ -55,11 +56,13 @@ The current implementation has limited education field matching capabilities:
 ## Usage
 
 1. Install required dependencies:
+
 ```bash
 pip install selenium
 ```
 
 2. Run either script:
+
 ```bash
 python scraping_v1.py
 # or
@@ -92,4 +95,3 @@ The script generates a JSON file (`getprog_candidates.json`) containing an array
   "page": 1
 }
 ```
-

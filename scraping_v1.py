@@ -7,7 +7,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException, ElementClickInterceptedException
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    ElementNotInteractableException,
+    ElementClickInterceptedException,
+)
 
 # Base URL part - corrected yo_employment parameter
 LOGIN_URL = "https://app.getprog.ai/login"
@@ -17,6 +22,7 @@ BASE_SEARCH_URL = "https://app.getprog.ai/search/results?countries[]=United%20St
 RESULTS_PER_PAGE = 20
 MAX_CANDIDATES = 60
 
+
 def setup_driver():
     """Set up and return a Chrome webdriver with appropriate options."""
     chrome_options = Options()
@@ -25,32 +31,41 @@ def setup_driver():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument(
+        "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    )
 
     driver = webdriver.Chrome(options=chrome_options)
     return driver
+
 
 def setup_driver_no_image():
     """Set up and return a Chrome webdriver with appropriate options, disabling images loading."""
     chrome_options = Options()
     # Disable image loading
     chrome_options.add_argument("--blink-settings=imagesEnabled=false")
-    chrome_options.add_experimental_option("prefs", {"profile.managed_default_content_settings.images": 2})
+    chrome_options.add_experimental_option(
+        "prefs", {"profile.managed_default_content_settings.images": 2}
+    )
 
     # Other necessary configurations
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    chrome_options.add_argument(
+        "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    )
 
     driver = webdriver.Chrome(options=chrome_options)
     return driver
+
 
 def save_page_source(driver, filename):
     """Save page source code for debugging"""
     with open(filename, "w", encoding="utf-8") as f:
         f.write(driver.page_source)
     print(f"Page source code saved to {filename}")
+
 
 def login(driver, email, password):
     """Handle step-by-step login process"""
@@ -69,12 +84,17 @@ def login(driver, email, password):
             input_name = inp.get_attribute("name")
             input_id = inp.get_attribute("id")
             input_placeholder = inp.get_attribute("placeholder")
-            print(f"Input field {i+1}: type={input_type}, name={input_name}, id={input_id}, placeholder={input_placeholder}")
+            print(
+                f"Input field {i+1}: type={input_type}, name={input_name}, id={input_id}, placeholder={input_placeholder}"
+            )
 
         # Find email input field
         email_input = None
         try:
-            email_input = driver.find_element(By.CSS_SELECTOR, "input[name='email'], input[placeholder='Email'], input[type='email']")
+            email_input = driver.find_element(
+                By.CSS_SELECTOR,
+                "input[name='email'], input[placeholder='Email'], input[type='email']",
+            )
             print("Found email input field")
         except NoSuchElementException:
             print("Email input field not found, trying to use first text input field")
@@ -114,14 +134,18 @@ def login(driver, email, password):
             # If no clear Continue button found, try submit form button
             if not continue_button:
                 try:
-                    continue_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+                    continue_button = driver.find_element(
+                        By.CSS_SELECTOR, "button[type='submit']"
+                    )
                     print("Using submit button as Continue button")
                 except NoSuchElementException:
                     # If still not found, try any clickable button
                     for button in buttons:
                         if button.is_displayed() and button.is_enabled():
                             continue_button = button
-                            print(f"Using visible button as Continue button: {button.text}")
+                            print(
+                                f"Using visible button as Continue button: {button.text}"
+                            )
                             break
 
             if not continue_button and len(buttons) > 0:
@@ -152,15 +176,22 @@ def login(driver, email, password):
             input_name = inp.get_attribute("name")
             input_id = inp.get_attribute("id")
             input_placeholder = inp.get_attribute("placeholder")
-            print(f"Input field {i+1}: type={input_type}, name={input_name}, id={input_id}, placeholder={input_placeholder}")
+            print(
+                f"Input field {i+1}: type={input_type}, name={input_name}, id={input_id}, placeholder={input_placeholder}"
+            )
 
         # Find password input field
         password_input = None
         try:
-            password_input = driver.find_element(By.CSS_SELECTOR, "input[type='password'], input[name='password'], input[placeholder='Password']")
+            password_input = driver.find_element(
+                By.CSS_SELECTOR,
+                "input[type='password'], input[name='password'], input[placeholder='Password']",
+            )
             print("Found password input field")
         except NoSuchElementException:
-            print("No clear password input field found, trying to find any newly appeared input field")
+            print(
+                "No clear password input field found, trying to find any newly appeared input field"
+            )
 
             # Try to find any possible password input field
             inputs = driver.find_elements(By.TAG_NAME, "input")
@@ -185,7 +216,9 @@ def login(driver, email, password):
             password_input.send_keys(password)
             print("Password entered")
         else:
-            raise Exception("Password input field not found, please check login page second step")
+            raise Exception(
+                "Password input field not found, please check login page second step"
+            )
 
         # Find and click final login button
         login_button = None
@@ -205,14 +238,18 @@ def login(driver, email, password):
             # If no clear login button found, try submit form button
             if not login_button:
                 try:
-                    login_button = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+                    login_button = driver.find_element(
+                        By.CSS_SELECTOR, "button[type='submit']"
+                    )
                     print("Using submit button as login button")
                 except NoSuchElementException:
                     # If still not found, try any clickable button
                     for button in buttons:
                         if button.is_displayed() and button.is_enabled():
                             login_button = button
-                            print(f"Using visible button as login button: {button.text}")
+                            print(
+                                f"Using visible button as login button: {button.text}"
+                            )
                             break
         except Exception as e:
             print(f"Error finding login button: {str(e)}")
@@ -232,7 +269,7 @@ def login(driver, email, password):
 
         # Check if login was successful
         if "login" in driver.current_url.lower():
-            print("Login may have failed, still on login page") # Slightly rephrased
+            print("Login may have failed, still on login page")  # Slightly rephrased
             return False
 
         print("Login successful!")
@@ -242,9 +279,11 @@ def login(driver, email, password):
         print(f"Login error: {str(e)}")
         return False
 
+
 def get_search_url(page_number, size=20):
     """Construct search URL based on page number"""
     return f"{BASE_SEARCH_URL}&page={page_number+1}&size={size}"
+
 
 def analyze_page_structure(driver, page_number):
     """Analyze page structure to find elements potentially containing candidate information"""
@@ -274,26 +313,39 @@ def analyze_page_structure(driver, page_number):
 
     # Find elements potentially containing search results
     result_candidates = []
-    possible_result_classes = ["result", "search", "candidate", "profile", "card", "list", "container"]
+    possible_result_classes = [
+        "result",
+        "search",
+        "candidate",
+        "profile",
+        "card",
+        "list",
+        "container",
+    ]
     for div in all_divs:
         class_name = div.get_attribute("class") or ""
         if any(term in class_name.lower() for term in possible_result_classes):
             try:
                 text = div.text
-                if text and len(text) > 50:  # Only consider elements with significant text
-                    result_candidates.append({
-                        "element": div,
-                        "class": class_name,
-                        "text_length": len(text)
-                    })
+                if (
+                    text and len(text) > 50
+                ):  # Only consider elements with significant text
+                    result_candidates.append(
+                        {"element": div, "class": class_name, "text_length": len(text)}
+                    )
             except:
                 pass
 
-    print(f"Found {len(result_candidates)} elements potentially containing search results")
+    print(
+        f"Found {len(result_candidates)} elements potentially containing search results"
+    )
     for i, candidate in enumerate(result_candidates):
-        print(f"Potential result container {i+1}: class='{candidate['class']}', text length={candidate['text_length']}")
+        print(
+            f"Potential result container {i+1}: class='{candidate['class']}', text length={candidate['text_length']}"
+        )
 
     return result_candidates
+
 
 def extract_info_from_element(element, page_number):
     """Extract candidate information from element, keep only clean data without HTML"""
@@ -309,17 +361,17 @@ def extract_info_from_element(element, page_number):
 
         # Filter out text that looks like UI elements
         ui_patterns = [
-            r'^\d+%\s*match$',  # Match percentage
-            r'^\+\d+\s*more$',   # +N more button
-            r'^[a-z\-]+$',       # Single lowercase tag like "python", "rust"
-            r'^(?:python|rust|spark|scale|ai|jax|robotics|throughput|multimodal|preprocessing)$',  # Common skill tags
+            r"^\d+%\s*match$",  # Match percentage
+            r"^\+\d+\s*more$",  # +N more button
+            r"^[a-z\-]+$",  # Single lowercase tag like "python", "rust"
+            r"^(?:python|rust|spark|scale|ai|jax|robotics|throughput|multimodal|preprocessing)$",  # Common skill tags
         ]
 
         if any(re.search(pattern, element_text.lower()) for pattern in ui_patterns):
             return None
 
         # Save raw text, but not HTML
-        text_lines = element_text.split('\n')
+        text_lines = element_text.split("\n")
         # Filter out empty lines and lines with only whitespace
         text_lines = [line.strip() for line in text_lines if line.strip()]
 
@@ -336,7 +388,7 @@ def extract_info_from_element(element, page_number):
             "github": "",
             "linkedin": "",
             "education": "",
-            "skills": []
+            "skills": [],
         }
 
         # Try to extract title/position information (usually the first line)
@@ -344,41 +396,71 @@ def extract_info_from_element(element, page_number):
 
         # Detect name and position
         # Typical name pattern: Capitalized two or more words
-        name_pattern = r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+$'
-        job_keywords = ["engineer", "developer", "scientist", "manager", "lead", "head",
-                       "architect", "specialist", "analyst", "consultant", "intern", "researcher",
-                       "software", "data", "system", "director", "@"]
+        name_pattern = r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+$"
+        job_keywords = [
+            "engineer",
+            "developer",
+            "scientist",
+            "manager",
+            "lead",
+            "head",
+            "architect",
+            "specialist",
+            "analyst",
+            "consultant",
+            "intern",
+            "researcher",
+            "software",
+            "data",
+            "system",
+            "director",
+            "@",
+        ]
 
         # Name detection
-        if re.match(name_pattern, title_text) and not any(keyword.lower() in title_text.lower() for keyword in job_keywords):
+        if re.match(name_pattern, title_text) and not any(
+            keyword.lower() in title_text.lower() for keyword in job_keywords
+        ):
             candidate["name"] = title_text
 
             # Find position (usually in the first line after name)
             for line in text_lines[1:]:
-                if any(keyword.lower() in line.lower() for keyword in job_keywords) and len(line) > 5:
+                if (
+                    any(keyword.lower() in line.lower() for keyword in job_keywords)
+                    and len(line) > 5
+                ):
                     candidate["position"] = line
                     break
         else:
             # If first line is not name, it could be position
-            if any(keyword.lower() in title_text.lower() for keyword in job_keywords) and len(title_text) > 5:
+            if (
+                any(keyword.lower() in title_text.lower() for keyword in job_keywords)
+                and len(title_text) > 5
+            ):
                 candidate["position"] = title_text
 
                 # See if name can be found from other lines
                 for line in text_lines[1:]:
-                    if re.match(name_pattern, line) and not any(kw.lower() in line.lower() for kw in job_keywords):
+                    if re.match(name_pattern, line) and not any(
+                        kw.lower() in line.lower() for kw in job_keywords
+                    ):
                         candidate["name"] = line
                         break
 
         # Extract experience information
         for line in text_lines:
             # Match common experience representation
-            exp_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:years?|yrs?)\s*(?:experience|exp)?', line, re.IGNORECASE)
+            exp_match = re.search(
+                r"(\d+(?:\.\d+)?)\s*(?:years?|yrs?)\s*(?:experience|exp)?",
+                line,
+                re.IGNORECASE,
+            )
             if exp_match:
                 candidate["experience"] = f"{exp_match.group(1)} years"
                 break
 
             # Short experience representation
-            short_exp = re.search(r'(\d+)\s*y\s+experience', line, re.IGNORECASE)
+            short_exp = re.search(r"(\d+)\s*y\s+experience", line, re.IGNORECASE)
             if short_exp:
                 candidate["experience"] = f"{short_exp.group(1)} years"
                 break
@@ -386,26 +468,46 @@ def extract_info_from_element(element, page_number):
         # Extract location information
         for line in text_lines:
             # Try to match California city
-            location_match = re.search(r'((?:San Francisco|San Jose|Berkeley|Oakland|Palo Alto|Mountain View)(?:,\s*(?:California|CA))?)', line, re.IGNORECASE)
+            location_match = re.search(
+                r"((?:San Francisco|San Jose|Berkeley|Oakland|Palo Alto|Mountain View)(?:,\s*(?:California|CA))?)",
+                line,
+                re.IGNORECASE,
+            )
             if location_match:
                 location = location_match.group(1)
                 # Ensure state name is included
-                if "california" not in location.lower() and "ca" not in location.lower().split():
+                if (
+                    "california" not in location.lower()
+                    and "ca" not in location.lower().split()
+                ):
                     location += ", California"
                 candidate["location"] = location
                 break
 
         # Extract LinkedIn and GitHub links
-        github_elements = element.find_elements(By.CSS_SELECTOR, "a[href*='github.com']")
+        github_elements = element.find_elements(
+            By.CSS_SELECTOR, "a[href*='github.com']"
+        )
         if github_elements:
             candidate["github"] = github_elements[0].get_attribute("href")
 
-        linkedin_elements = element.find_elements(By.CSS_SELECTOR, "a[href*='linkedin.com']")
+        linkedin_elements = element.find_elements(
+            By.CSS_SELECTOR, "a[href*='linkedin.com']"
+        )
         if linkedin_elements:
             candidate["linkedin"] = linkedin_elements[0].get_attribute("href")
 
         # Extract education information
-        edu_keywords = ["University", "College", "Bachelor", "Master", "PhD", "B.S.", "M.S.", "Ph.D."]
+        edu_keywords = [
+            "University",
+            "College",
+            "Bachelor",
+            "Master",
+            "PhD",
+            "B.S.",
+            "M.S.",
+            "Ph.D.",
+        ]
         for line in text_lines:
             if any(keyword.lower() in line.lower() for keyword in edu_keywords):
                 candidate["education"] = line
@@ -413,29 +515,66 @@ def extract_info_from_element(element, page_number):
 
         # Extract skill keywords
         skills = []
-        skill_keywords = ["Python", "Java", "JavaScript", "C++", "Rust", "Go", "SQL", "Spark", "Hadoop",
-                         "AWS", "Azure", "GCP", "Docker", "Kubernetes", "React", "Angular", "Vue",
-                         "Data Science", "Machine Learning", "AI", "Deep Learning", "Cloud", "Big Data"]
+        skill_keywords = [
+            "Python",
+            "Java",
+            "JavaScript",
+            "C++",
+            "Rust",
+            "Go",
+            "SQL",
+            "Spark",
+            "Hadoop",
+            "AWS",
+            "Azure",
+            "GCP",
+            "Docker",
+            "Kubernetes",
+            "React",
+            "Angular",
+            "Vue",
+            "Data Science",
+            "Machine Learning",
+            "AI",
+            "Deep Learning",
+            "Cloud",
+            "Big Data",
+        ]
 
         for line in text_lines:
             for skill in skill_keywords:
-                if re.search(r'\b' + re.escape(skill) + r'\b', line, re.IGNORECASE):
+                if re.search(r"\b" + re.escape(skill) + r"\b", line, re.IGNORECASE):
                     skills.append(skill)
 
         # Remove duplicates and sort
         candidate["skills"] = sorted(list(set(skills)))
 
         # If no obvious information was captured, it might not be a real candidate
-        non_empty_fields = sum(1 for field in ["name", "position", "location", "experience", "github", "linkedin"]
-                              if candidate[field] and candidate[field] != "Unknown")
+        non_empty_fields = sum(
+            1
+            for field in [
+                "name",
+                "position",
+                "location",
+                "experience",
+                "github",
+                "linkedin",
+            ]
+            if candidate[field] and candidate[field] != "Unknown"
+        )
 
-        if non_empty_fields < 2 and not candidate["github"] and not candidate["linkedin"]:
+        if (
+            non_empty_fields < 2
+            and not candidate["github"]
+            and not candidate["linkedin"]
+        ):
             return None  # Information too little, possibly mis-extracted
 
         return candidate
     except Exception as e:
         print(f"Error extracting information from element: {str(e)}")
         return None
+
 
 def extract_candidate_info_from_page(driver, page_number):
     """Extract candidate information from current page"""
@@ -458,13 +597,17 @@ def extract_candidate_info_from_page(driver, page_number):
             print("Trying to find ProfileRow elements...")
             # Find top-level ProfileRow elements, usually directly containing full candidate information
             # Modify selector to more accurately match main candidate rows
-            main_profile_rows = driver.find_elements(By.CSS_SELECTOR,
-                "tr[class*='ProfileRow_profile'], div[class*='search-result-item']")
+            main_profile_rows = driver.find_elements(
+                By.CSS_SELECTOR,
+                "tr[class*='ProfileRow_profile'], div[class*='search-result-item']",
+            )
 
             if not main_profile_rows or len(main_profile_rows) < RESULTS_PER_PAGE / 2:
                 # Try other common selectors
-                main_profile_rows = driver.find_elements(By.CSS_SELECTOR,
-                    "[class*='profile-row'], [class*='profile_row'], [class*='ProfileRow']")
+                main_profile_rows = driver.find_elements(
+                    By.CSS_SELECTOR,
+                    "[class*='profile-row'], [class*='profile_row'], [class*='ProfileRow']",
+                )
 
             # Filter out possible child elements, only keep main rows
             valid_rows = []
@@ -491,8 +634,12 @@ def extract_candidate_info_from_page(driver, page_number):
 
                 # If candidate count is already close to expected, return immediately
                 if len(candidates) >= min(15, RESULTS_PER_PAGE * 0.75):
-                    print(f"Extracted {len(candidates)} candidates using ProfileRow selector, close to expected")
-                    return candidates[:RESULTS_PER_PAGE]  # Return at most RESULTS_PER_PAGE
+                    print(
+                        f"Extracted {len(candidates)} candidates using ProfileRow selector, close to expected"
+                    )
+                    return candidates[
+                        :RESULTS_PER_PAGE
+                    ]  # Return at most RESULTS_PER_PAGE
 
         except Exception as e:
             print(f"Error extracting data using ProfileRow selector: {str(e)}")
@@ -502,8 +649,10 @@ def extract_candidate_info_from_page(driver, page_number):
             try:
                 print("Trying to find complete candidate card...")
                 # Modify selector to more accurately match candidate cards
-                profile_cards = driver.find_elements(By.CSS_SELECTOR,
-                    "div[class*='candidate-card'], div[class*='profile-card'], div[class*='item']")
+                profile_cards = driver.find_elements(
+                    By.CSS_SELECTOR,
+                    "div[class*='candidate-card'], div[class*='profile-card'], div[class*='item']",
+                )
 
                 # Filter out duplicates and invalid cards
                 valid_cards = []
@@ -515,7 +664,7 @@ def extract_candidate_info_from_page(driver, page_number):
 
                     # Check if it's a valid card
                     text = card.text.strip()
-                    if len(text) > 100 and '\n' in text:
+                    if len(text) > 100 and "\n" in text:
                         valid_cards.append(card)
                         processed_elements.add(element_id)
 
@@ -529,7 +678,9 @@ def extract_candidate_info_from_page(driver, page_number):
 
                 # Keep at most RESULTS_PER_PAGE candidates
                 if len(candidates) > RESULTS_PER_PAGE:
-                    print(f"Extracted {len(candidates)} candidates, more than expected per page, truncating to {RESULTS_PER_PAGE}")
+                    print(
+                        f"Extracted {len(candidates)} candidates, more than expected per page, truncating to {RESULTS_PER_PAGE}"
+                    )
                     candidates = candidates[:RESULTS_PER_PAGE]
             except Exception as e:
                 print(f"Error extracting candidate card: {str(e)}")
@@ -545,12 +696,16 @@ def extract_candidate_info_from_page(driver, page_number):
             # Sort by text length, prioritize longer containers
             result_containers.sort(key=lambda x: x["text_length"], reverse=True)
 
-            for container_info in result_containers[:2]:  # Try first 2 most likely containers
+            for container_info in result_containers[
+                :2
+            ]:  # Try first 2 most likely containers
                 container = container_info["element"]
                 try:
                     # Find possible candidate elements in container
-                    potential_elements = container.find_elements(By.CSS_SELECTOR,
-                        "div[class*='item'], div[class*='row'], div[class*='card']")
+                    potential_elements = container.find_elements(
+                        By.CSS_SELECTOR,
+                        "div[class*='item'], div[class*='row'], div[class*='card']",
+                    )
 
                     # Filter elements
                     for el in potential_elements:
@@ -561,7 +716,7 @@ def extract_candidate_info_from_page(driver, page_number):
 
                         # Check if it's a valid element
                         text = el.text.strip()
-                        if len(text) > 100 and '\n' in text:
+                        if len(text) > 100 and "\n" in text:
                             candidate = extract_info_from_element(el, page_number)
                             if candidate:
                                 candidates.append(candidate)
@@ -584,6 +739,7 @@ def extract_candidate_info_from_page(driver, page_number):
     print(f"Extracted {len(candidates)} candidates from page {page_number+1}")
     return candidates
 
+
 def find_pagination_elements(driver):
     """Find all possible pagination elements and return detailed information"""
     pagination_elements = []
@@ -596,7 +752,7 @@ def find_pagination_elements(driver):
         "nav",
         "[class*='nav']",
         "[class*='pager']",
-        "[class*='pages']"
+        "[class*='pages']",
     ]
 
     # Find all possible containers containing pagination
@@ -638,18 +794,24 @@ def find_pagination_elements(driver):
                     # If button has no text, try to determine based on aria-label and class
                     if not text and button_type == "unknown":
                         # Removed Chinese aria-label checks
-                        if any(term in aria_label.lower() for term in ["next", "next page"]):
+                        if any(
+                            term in aria_label.lower() for term in ["next", "next page"]
+                        ):
                             button_type = "next"
-                        elif any(term in classname.lower() for term in ["next", "forward"]):
+                        elif any(
+                            term in classname.lower() for term in ["next", "forward"]
+                        ):
                             button_type = "next"
 
-                    pagination_elements.append({
-                        "element": button,
-                        "text": text,
-                        "type": button_type,
-                        "is_disabled": is_disabled,
-                        "element_type": "button"
-                    })
+                    pagination_elements.append(
+                        {
+                            "element": button,
+                            "text": text,
+                            "type": button_type,
+                            "is_disabled": is_disabled,
+                            "element_type": "button",
+                        }
+                    )
                 except Exception as e:
                     print(f"Error processing pagination button: {str(e)}")
 
@@ -673,23 +835,32 @@ def find_pagination_elements(driver):
 
                     # If link has no text, try to determine based on href, aria-label and class
                     if not text and link_type == "unknown":
-                        if "page=" in href and href.split("page=")[1].split("&")[0].isdigit():
+                        if (
+                            "page=" in href
+                            and href.split("page=")[1].split("&")[0].isdigit()
+                        ):
                             page_num = href.split("page=")[1].split("&")[0]
                             link_type = "page"
                             text = page_num
                         # Removed Chinese aria-label checks
-                        elif any(term in aria_label.lower() for term in ["next", "next page"]):
+                        elif any(
+                            term in aria_label.lower() for term in ["next", "next page"]
+                        ):
                             link_type = "next"
-                        elif any(term in classname.lower() for term in ["next", "forward"]):
+                        elif any(
+                            term in classname.lower() for term in ["next", "forward"]
+                        ):
                             link_type = "next"
 
-                    pagination_elements.append({
-                        "element": link,
-                        "text": text,
-                        "type": link_type,
-                        "href": href,
-                        "element_type": "link"
-                    })
+                    pagination_elements.append(
+                        {
+                            "element": link,
+                            "text": text,
+                            "type": link_type,
+                            "href": href,
+                            "element_type": "link",
+                        }
+                    )
                 except Exception as e:
                     print(f"Error processing pagination link: {str(e)}")
 
@@ -700,8 +871,10 @@ def find_pagination_elements(driver):
     if not any(el["type"] == "next" for el in pagination_elements):
         try:
             # Try to find possible elements containing arrow icons
-            svg_containers = driver.find_elements(By.CSS_SELECTOR,
-                "button svg, a svg, [class*='next'] svg, [class*='arrow'] svg")
+            svg_containers = driver.find_elements(
+                By.CSS_SELECTOR,
+                "button svg, a svg, [class*='next'] svg, [class*='arrow'] svg",
+            )
 
             for container in svg_containers:
                 parent = container
@@ -710,12 +883,14 @@ def find_pagination_elements(driver):
                     try:
                         parent = parent.find_element(By.XPATH, "./..")
                         if parent.tag_name in ["button", "a"]:
-                            pagination_elements.append({
-                                "element": parent,
-                                "text": "SVG Icon",
-                                "type": "next",
-                                "element_type": parent.tag_name
-                            })
+                            pagination_elements.append(
+                                {
+                                    "element": parent,
+                                    "text": "SVG Icon",
+                                    "type": "next",
+                                    "element_type": parent.tag_name,
+                                }
+                            )
                             print("Found next page button based on SVG icon")
                             break
                     except:
@@ -726,9 +901,12 @@ def find_pagination_elements(driver):
     # Print found pagination elements information
     print(f"Found {len(pagination_elements)} pagination elements")
     for i, el in enumerate(pagination_elements):
-        print(f"Pagination element {i+1}: type={el['type']}, text='{el['text']}', element type={el['element_type']}")
+        print(
+            f"Pagination element {i+1}: type={el['type']}, text='{el['text']}', element type={el['element_type']}"
+        )
 
     return pagination_elements
+
 
 def navigate_to_page(driver, page_number):
     """Navigate to specified page number"""
@@ -756,7 +934,7 @@ def navigate_to_page(driver, page_number):
             # First find the button for the specified page number
             page_button = None
             for el in pagination_elements:
-                if el["type"] == "page" and el["text"] == str(page_number+1):
+                if el["type"] == "page" and el["text"] == str(page_number + 1):
                     page_button = el
                     print(f"Found button for page {page_number+1}")
                     break
@@ -764,28 +942,38 @@ def navigate_to_page(driver, page_number):
             # If the specified page number is not found, try using the "Next page" button
             if not page_button and page_number > 0:
                 # Find the "Next page" button
-                next_buttons = [el for el in pagination_elements if el["type"] == "next"]
+                next_buttons = [
+                    el for el in pagination_elements if el["type"] == "next"
+                ]
 
                 if next_buttons:
                     # Prioritize using non-disabled buttons
-                    active_next_buttons = [btn for btn in next_buttons if not btn.get("is_disabled", False)]
+                    active_next_buttons = [
+                        btn for btn in next_buttons if not btn.get("is_disabled", False)
+                    ]
                     if active_next_buttons:
                         page_button = active_next_buttons[0]
                         print(f"Found next page button: {page_button['text']}")
                     elif next_buttons:
                         page_button = next_buttons[0]
-                        print(f"Found next page button (possibly disabled): {page_button['text']}")
+                        print(
+                            f"Found next page button (possibly disabled): {page_button['text']}"
+                        )
 
             # Attempt to click the found button
             if page_button:
                 element = page_button["element"]
                 # Scroll element into view
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
+                driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center'});", element
+                )
                 time.sleep(2)
 
                 try:
                     # Attempt to click the button
-                    print(f"Attempting to click pagination element: {page_button['text']}")
+                    print(
+                        f"Attempting to click pagination element: {page_button['text']}"
+                    )
                     element.click()
                     print(f"Pagination element clicked")
                     # Wait for page to load
@@ -804,10 +992,15 @@ def navigate_to_page(driver, page_number):
 
                         # Check URL again
                         if driver.current_url != current_url:
-                            print(f"URL changed after JavaScript click: {driver.current_url}")
+                            print(
+                                f"URL changed after JavaScript click: {driver.current_url}"
+                            )
                             return True
 
-                except (ElementNotInteractableException, ElementClickInterceptedException) as e:
+                except (
+                    ElementNotInteractableException,
+                    ElementClickInterceptedException,
+                ) as e:
                     print(f"Direct click failed: {str(e)}, trying JavaScript click")
                     try:
                         # Attempt to use JavaScript click
@@ -816,7 +1009,9 @@ def navigate_to_page(driver, page_number):
 
                         # Check if URL changed
                         if driver.current_url != current_url:
-                            print(f"URL changed after JavaScript click: {driver.current_url}")
+                            print(
+                                f"URL changed after JavaScript click: {driver.current_url}"
+                            )
                             return True
                     except Exception as js_e:
                         print(f"JavaScript click also failed: {str(js_e)}")
@@ -840,10 +1035,18 @@ def navigate_to_page(driver, page_number):
     try:
         # Wait for candidate information to appear on the page
         WebDriverWait(driver, 10).until(
-            lambda d: len(d.find_elements(By.CSS_SELECTOR, "[class*='profile'], [class*='candidate'], [class*='card'], [class*='result-item']")) > 2
+            lambda d: len(
+                d.find_elements(
+                    By.CSS_SELECTOR,
+                    "[class*='profile'], [class*='candidate'], [class*='card'], [class*='result-item']",
+                )
+            )
+            > 2
         )
     except TimeoutException:
-        print(f"Timeout waiting for candidate information, attempting to refresh page...")
+        print(
+            f"Timeout waiting for candidate information, attempting to refresh page..."
+        )
         driver.refresh()
         time.sleep(10)
 
@@ -862,25 +1065,37 @@ def navigate_to_page(driver, page_number):
     time.sleep(2)
 
     # Check if the page actually displays search results
-    profile_elements = driver.find_elements(By.CSS_SELECTOR, "[class*='profile'], [class*='candidate'], [class*='card'], [class*='result-item']")
+    profile_elements = driver.find_elements(
+        By.CSS_SELECTOR,
+        "[class*='profile'], [class*='candidate'], [class*='card'], [class*='result-item']",
+    )
     print(f"Found {len(profile_elements)} potential candidate elements on the page")
 
     if len(profile_elements) < 3:
-        print("Warning: Too few candidate elements found, page may not have loaded correctly")
+        print(
+            "Warning: Too few candidate elements found, page may not have loaded correctly"
+        )
         return False
 
     # Check again if the page contains expected content
     content = driver.page_source
     # Removed Chinese "没有结果" check
     if "No results" in content and page_number > 0:
-        print(f"Warning: Page {page_number+1} shows no results, possibly requires re-login")
+        print(
+            f"Warning: Page {page_number+1} shows no results, possibly requires re-login"
+        )
         return False
-    elif len(content) < 5000 and page_number > 0:  # Too little content might mean page didn't load
-        print(f"Warning: Page {page_number+1} has unusually little content, possibly did not load correctly")
+    elif (
+        len(content) < 5000 and page_number > 0
+    ):  # Too little content might mean page didn't load
+        print(
+            f"Warning: Page {page_number+1} has unusually little content, possibly did not load correctly"
+        )
         return False
 
     print(f"Page {page_number+1} loaded successfully")
     return True
+
 
 def clean_data(candidates):
     """Clean and check data quality"""
@@ -888,7 +1103,17 @@ def clean_data(candidates):
 
     for candidate in candidates:
         # Ensure all necessary fields exist
-        required_fields = ["name", "position", "github", "linkedin", "location", "experience", "education", "skills", "page"]
+        required_fields = [
+            "name",
+            "position",
+            "github",
+            "linkedin",
+            "location",
+            "experience",
+            "education",
+            "skills",
+            "page",
+        ]
         for field in required_fields:
             if field not in candidate:
                 candidate[field] = "" if field != "skills" else []
@@ -896,7 +1121,17 @@ def clean_data(candidates):
         # Clean experience field, ensure format consistency
         if candidate["experience"]:
             # If experience field looks like it contains location information, fix it
-            if any(city in candidate["experience"].lower() for city in ["san francisco", "san jose", "oakland", "berkeley", "palo alto", "mountain view"]):
+            if any(
+                city in candidate["experience"].lower()
+                for city in [
+                    "san francisco",
+                    "san jose",
+                    "oakland",
+                    "berkeley",
+                    "palo alto",
+                    "mountain view",
+                ]
+            ):
                 # Move experience value to location field
                 if not candidate["location"]:
                     candidate["location"] = candidate["experience"]
@@ -905,8 +1140,20 @@ def clean_data(candidates):
 
         # If name field contains position information, fix it
         if candidate["name"] != "Unknown":
-            job_indicators = ["engineer", "developer", "programmer", "lead", "senior", "software", "data scientist", "@"]
-            if any(indicator.lower() in candidate["name"].lower() for indicator in job_indicators):
+            job_indicators = [
+                "engineer",
+                "developer",
+                "programmer",
+                "lead",
+                "senior",
+                "software",
+                "data scientist",
+                "@",
+            ]
+            if any(
+                indicator.lower() in candidate["name"].lower()
+                for indicator in job_indicators
+            ):
                 # If name contains position information, possibly wrong, move to position field
                 if not candidate["position"]:
                     candidate["position"] = candidate["name"]
@@ -915,33 +1162,64 @@ def clean_data(candidates):
         # Check position field whether it's actually name
         if candidate["position"] and candidate["name"] == "Unknown":
             # Name usually capitalized 2-3 word
-            name_pattern = r'^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}$'
-            job_indicators = ["engineer", "developer", "scientist", "manager", "lead", "senior", "@"]
+            name_pattern = r"^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}$"
+            job_indicators = [
+                "engineer",
+                "developer",
+                "scientist",
+                "manager",
+                "lead",
+                "senior",
+                "@",
+            ]
 
-            if re.match(name_pattern, candidate["position"]) and not any(ind.lower() in candidate["position"].lower() for ind in job_indicators):
+            if re.match(name_pattern, candidate["position"]) and not any(
+                ind.lower() in candidate["position"].lower() for ind in job_indicators
+            ):
                 candidate["name"] = candidate["position"]
                 candidate["position"] = ""
 
         # For position field, ensure key position words capitalized
         if candidate["position"]:
-            terms_to_capitalize = ["engineer", "developer", "scientist", "manager", "lead", "architect", "senior", "data"]
+            terms_to_capitalize = [
+                "engineer",
+                "developer",
+                "scientist",
+                "manager",
+                "lead",
+                "architect",
+                "senior",
+                "data",
+            ]
             position = candidate["position"]
             for term in terms_to_capitalize:
                 # Replace term with capitalized form
-                pattern = re.compile(r'\b' + term + r'\b', re.IGNORECASE)
+                pattern = re.compile(r"\b" + term + r"\b", re.IGNORECASE)
                 position = pattern.sub(term.capitalize(), position)
             candidate["position"] = position.strip()
 
         # Filter out entries that seem like meaningless UI elements
-        if (candidate["position"] in ["scale", "+1 more", "+2 more", "+3 more", "+6 more", "throughput", "preprocessing"] or
-            candidate["position"].lower() in ["python", "rust", "spark", "ai"] or
-            re.match(r'^\d+% match$', candidate["position"])):
+        if (
+            candidate["position"]
+            in [
+                "scale",
+                "+1 more",
+                "+2 more",
+                "+3 more",
+                "+6 more",
+                "throughput",
+                "preprocessing",
+            ]
+            or candidate["position"].lower() in ["python", "rust", "spark", "ai"]
+            or re.match(r"^\d+% match$", candidate["position"])
+        ):
             continue
 
         # Add to cleaned list
         cleaned.append(candidate)
 
     return cleaned
+
 
 def merge_candidate_entries(entries):
     """Merge multiple candidate entries"""
@@ -953,9 +1231,21 @@ def merge_candidate_entries(entries):
 
     # Iterate over remaining entries to fill missing information
     for entry in entries[1:]:
-        for field in ["name", "position", "location", "experience", "github", "linkedin", "education"]:
+        for field in [
+            "name",
+            "position",
+            "location",
+            "experience",
+            "github",
+            "linkedin",
+            "education",
+        ]:
             # If current field is empty but other entries have value, fill
-            if (not merged[field] or merged[field] == "Unknown") and entry[field] and entry[field] != "Unknown":
+            if (
+                (not merged[field] or merged[field] == "Unknown")
+                and entry[field]
+                and entry[field] != "Unknown"
+            ):
                 merged[field] = entry[field]
 
         # Merge skills
@@ -975,6 +1265,7 @@ def merge_candidate_entries(entries):
                 merged["name"] = linkedin_parts[-1] + " (from LinkedIn)"
 
     return merged
+
 
 def remove_duplicates(candidates):
     """Remove duplicate candidate information and merge related entries"""
@@ -999,7 +1290,11 @@ def remove_duplicates(candidates):
     # Second step: Group remaining candidates by name
     name_grouped = {}
     for candidate in candidates:
-        if candidate["name"] != "Unknown" and not candidate["github"] and not candidate["linkedin"]:
+        if (
+            candidate["name"] != "Unknown"
+            and not candidate["github"]
+            and not candidate["linkedin"]
+        ):
             key = f"name:{candidate['name']}"
             if key not in name_grouped:
                 name_grouped[key] = []
@@ -1047,8 +1342,13 @@ def remove_duplicates(candidates):
     # Add remaining unclassified candidates (no GitHub, LinkedIn, name Unknown cases)
     position_grouped = {}
     for candidate in candidates:
-        if (candidate["name"] == "Unknown" and not candidate["github"] and not candidate["linkedin"] and
-            candidate["position"] and len(candidate["position"]) > 10):
+        if (
+            candidate["name"] == "Unknown"
+            and not candidate["github"]
+            and not candidate["linkedin"]
+            and candidate["position"]
+            and len(candidate["position"]) > 10
+        ):
 
             # Use position and location as key
             key = f"pos:{candidate['position']}|loc:{candidate['location']}"
@@ -1064,17 +1364,22 @@ def remove_duplicates(candidates):
             # Check if duplicate with existing entries (based on position and location)
             is_duplicate = False
             for cand in merged_candidates:
-                if (cand["position"] == merged["position"] and
-                    cand["location"] == merged["location"] and
-                    cand["experience"] == merged["experience"]):
+                if (
+                    cand["position"] == merged["position"]
+                    and cand["location"] == merged["location"]
+                    and cand["experience"] == merged["experience"]
+                ):
                     is_duplicate = True
                     break
 
             if not is_duplicate:
                 merged_candidates.append(merged)
 
-    print(f"Before removing duplicates: {len(candidates)} records, After removing duplicates: {len(merged_candidates)} records")
+    print(
+        f"Before removing duplicates: {len(candidates)} records, After removing duplicates: {len(merged_candidates)} records"
+    )
     return merged_candidates
+
 
 def main():
     """Run main program, complete login and data scraping"""
@@ -1098,7 +1403,7 @@ def main():
         all_candidates = []
         page_number = 0
         # Set maximum pages and candidate limit based on input code
-        max_pages = 4 # Using the value from the input code
+        max_pages = 4  # Using the value from the input code
         # MAX_CANDIDATES is already defined as 60
 
         # Main scraping loop
@@ -1116,7 +1421,9 @@ def main():
                     # Try navigation again
                     page_loaded = navigate_to_page(driver, page_number)
                     if not page_loaded:
-                        print(f"Still unable to load page {page_number+1} after re-login, skipping")
+                        print(
+                            f"Still unable to load page {page_number+1} after re-login, skipping"
+                        )
                         # Try next page
                         page_number += 1
                         continue
@@ -1129,13 +1436,17 @@ def main():
 
             # If too few candidates retrieved (less than 5), might be a page load issue, retry once
             if len(candidates) < 5 and page_number > 0:
-                print(f"Too few candidates extracted from page {page_number+1}, trying to reload...")
+                print(
+                    f"Too few candidates extracted from page {page_number+1}, trying to reload..."
+                )
                 navigate_to_page(driver, page_number)
                 candidates = extract_candidate_info_from_page(driver, page_number)
 
                 # If still too few, might have reached end of results
                 if len(candidates) < 3:
-                    print(f"Still not enough candidates after retry, might have reached end of results")
+                    print(
+                        f"Still not enough candidates after retry, might have reached end of results"
+                    )
                     # Save existing results and exit loop
                     break
 
@@ -1145,7 +1456,9 @@ def main():
             # Add to total list
             all_candidates.extend(candidates)
 
-            print(f"Page {page_number+1}: Retrieved {len(candidates)} candidates, Total: {len(all_candidates)}/{MAX_CANDIDATES}")
+            print(
+                f"Page {page_number+1}: Retrieved {len(candidates)} candidates, Total: {len(all_candidates)}/{MAX_CANDIDATES}"
+            )
 
             # Prepare for next page
             page_number += 1
@@ -1163,11 +1476,14 @@ def main():
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(unique_candidates, f, ensure_ascii=False, indent=2)
 
-        print(f"\nScraping complete! Retrieved {len(unique_candidates)} unique candidate profiles, saved to {output_file}")
+        print(
+            f"\nScraping complete! Retrieved {len(unique_candidates)} unique candidate profiles, saved to {output_file}"
+        )
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         import traceback
+
         traceback.print_exc()
     finally:
         # Close browser
@@ -1175,6 +1491,7 @@ def main():
             driver.quit()
         except:
             pass
+
 
 if __name__ == "__main__":
     main()
