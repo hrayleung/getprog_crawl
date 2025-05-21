@@ -4,8 +4,8 @@ This project contains two Python scripts for scraping candidate information from
 
 ## Scripts
 
-- `scraping_v1.py`: Original version of the scraper
-- `scraping_v2.py`: Alternative version with additional debug print statements
+- `scraping_v1.py`: The main and recommended version of the scraper
+- `scraping_v2_deprecated.py`: A deprecated version with unauthorized modifications. This version should not be used as it contains unverified changes and debug statements that may affect functionality.
 
 ## Features
 
@@ -61,12 +61,10 @@ The current implementation has limited education field matching capabilities:
 pip install selenium
 ```
 
-2. Run either script:
+2. Run the script:
 
 ```bash
 python scraping_v1.py
-# or
-python scraping_v2.py
 ```
 
 3. Enter your GetProg.ai credentials when prompted

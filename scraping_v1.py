@@ -585,126 +585,104 @@ def extract_candidate_info_from_page(driver, page_number):
 
     # Try using multiple methods to extract data
     try:
-        # Wait some time to ensure page fully loads
+        # Wait longer time to ensure page fully loads
         print("Waiting for page elements to load...")
-        time.sleep(5)
+        time.sleep(10)  # Increased wait time
 
         # Track processed elements to avoid repeats
         processed_elements = set()
 
-        # 1. Prioritize finding explicit candidate rows - ProfileRow elements
+        # 1. Try to find complete candidate card - most reliable method
         try:
-            print("Trying to find ProfileRow elements...")
-            # Find top-level ProfileRow elements, usually directly containing full candidate information
-            # Modify selector to more accurately match main candidate rows
-            main_profile_rows = driver.find_elements(
+            print("Trying to find complete candidate card...")
+            # More comprehensive selectors for candidate cards
+            profile_cards = driver.find_elements(
                 By.CSS_SELECTOR,
-                "tr[class*='ProfileRow_profile'], div[class*='search-result-item']",
+                "div[class*='candidate-card'], div[class*='profile-card'], div[class*='item'], div[class*='row'], div[class*='ProfileRow']",
             )
 
-            if not main_profile_rows or len(main_profile_rows) < RESULTS_PER_PAGE / 2:
-                # Try other common selectors
-                main_profile_rows = driver.find_elements(
-                    By.CSS_SELECTOR,
-                    "[class*='profile-row'], [class*='profile_row'], [class*='ProfileRow']",
-                )
-
-            # Filter out possible child elements, only keep main rows
-            valid_rows = []
-            for row in main_profile_rows:
-                # If element already processed, skip
-                element_id = row.id
+            # Filter out duplicates and invalid cards
+            valid_cards = []
+            for card in profile_cards:
+                # Check if already processed
+                element_id = card.id
                 if element_id in processed_elements:
                     continue
 
-                # Check if it contains enough content
-                text = row.text.strip()
-                if len(text) > 100:  # Main candidate rows usually contain more text
-                    valid_rows.append(row)
+                # Check if it's a valid card
+                text = card.text.strip()
+                if len(text) > 50 and "\n" in text:  # Reduced minimum text length
+                    valid_cards.append(card)
                     processed_elements.add(element_id)
 
-            print(f"Found {len(valid_rows)} valid candidate rows")
+            print(f"Found {len(valid_cards)} valid candidate cards")
 
-            # If found row count is close to expected per page, use these rows
-            if len(valid_rows) >= min(10, RESULTS_PER_PAGE / 2):
+            # Extract candidate information
+            for card in valid_cards:
+                candidate = extract_info_from_element(card, page_number)
+                if candidate:
+                    candidates.append(candidate)
+
+            # If we have enough candidates, return them
+            if len(candidates) >= RESULTS_PER_PAGE:
+                print(
+                    f"Successfully extracted {len(candidates)} candidates using card layout"
+                )
+                return candidates[:RESULTS_PER_PAGE]
+
+        except Exception as e:
+            print(f"Error extracting candidate card: {str(e)}")
+
+        # 2. If card method didn't work, try finding explicit candidate rows
+        if len(candidates) < RESULTS_PER_PAGE:
+            try:
+                print("Trying to find ProfileRow elements...")
+                # More comprehensive selectors for profile rows
+                main_profile_rows = driver.find_elements(
+                    By.CSS_SELECTOR,
+                    "tr[class*='ProfileRow'], div[class*='search-result-item'], div[class*='profile-row'], div[class*='profile_row']",
+                )
+
+                # Filter out possible child elements, only keep main rows
+                valid_rows = []
+                for row in main_profile_rows:
+                    # If element already processed, skip
+                    element_id = row.id
+                    if element_id in processed_elements:
+                        continue
+
+                    # Check if it contains enough content
+                    text = row.text.strip()
+                    if len(text) > 50:  # Reduced minimum text length
+                        valid_rows.append(row)
+                        processed_elements.add(element_id)
+
+                print(f"Found {len(valid_rows)} valid candidate rows")
+
+                # Extract information from valid rows
                 for row in valid_rows:
                     candidate = extract_info_from_element(row, page_number)
                     if candidate:
                         candidates.append(candidate)
 
-                # If candidate count is already close to expected, return immediately
-                if len(candidates) >= min(15, RESULTS_PER_PAGE * 0.75):
-                    print(
-                        f"Extracted {len(candidates)} candidates using ProfileRow selector, close to expected"
-                    )
-                    return candidates[
-                        :RESULTS_PER_PAGE
-                    ]  # Return at most RESULTS_PER_PAGE
-
-        except Exception as e:
-            print(f"Error extracting data using ProfileRow selector: {str(e)}")
-
-        # 2. Try to find card layout
-        if len(candidates) < RESULTS_PER_PAGE / 2:
-            try:
-                print("Trying to find complete candidate card...")
-                # Modify selector to more accurately match candidate cards
-                profile_cards = driver.find_elements(
-                    By.CSS_SELECTOR,
-                    "div[class*='candidate-card'], div[class*='profile-card'], div[class*='item']",
-                )
-
-                # Filter out duplicates and invalid cards
-                valid_cards = []
-                for card in profile_cards:
-                    # Check if already processed
-                    element_id = card.id
-                    if element_id in processed_elements:
-                        continue
-
-                    # Check if it's a valid card
-                    text = card.text.strip()
-                    if len(text) > 100 and "\n" in text:
-                        valid_cards.append(card)
-                        processed_elements.add(element_id)
-
-                print(f"Found {len(valid_cards)} valid candidate cards")
-
-                # Extract candidate information
-                for card in valid_cards:
-                    candidate = extract_info_from_element(card, page_number)
-                    if candidate:
-                        candidates.append(candidate)
-
-                # Keep at most RESULTS_PER_PAGE candidates
-                if len(candidates) > RESULTS_PER_PAGE:
-                    print(
-                        f"Extracted {len(candidates)} candidates, more than expected per page, truncating to {RESULTS_PER_PAGE}"
-                    )
-                    candidates = candidates[:RESULTS_PER_PAGE]
             except Exception as e:
-                print(f"Error extracting candidate card: {str(e)}")
+                print(f"Error extracting data using ProfileRow selector: {str(e)}")
 
-        # If enough candidates found, return results
-        if candidates:
-            print(f"Extracted {len(candidates)} candidates from page {page_number+1}")
-            return candidates[:RESULTS_PER_PAGE]  # Ensure not exceed per page limit
-
-        # 3. If above methods fail, last resort try extracting from page structure
-        print("Trying to extract candidates from page structure...")
-        if result_containers:
+        # 3. If still not enough candidates, try extracting from page structure
+        if len(candidates) < RESULTS_PER_PAGE and result_containers:
+            print("Trying to extract candidates from page structure...")
             # Sort by text length, prioritize longer containers
             result_containers.sort(key=lambda x: x["text_length"], reverse=True)
 
             for container_info in result_containers[
-                :2
-            ]:  # Try first 2 most likely containers
+                :3
+            ]:  # Try first 3 most likely containers
                 container = container_info["element"]
                 try:
                     # Find possible candidate elements in container
                     potential_elements = container.find_elements(
                         By.CSS_SELECTOR,
-                        "div[class*='item'], div[class*='row'], div[class*='card']",
+                        "div[class*='item'], div[class*='row'], div[class*='card'], div[class*='profile']",
                     )
 
                     # Filter elements
@@ -716,7 +694,9 @@ def extract_candidate_info_from_page(driver, page_number):
 
                         # Check if it's a valid element
                         text = el.text.strip()
-                        if len(text) > 100 and "\n" in text:
+                        if (
+                            len(text) > 50 and "\n" in text
+                        ):  # Reduced minimum text length
                             candidate = extract_info_from_element(el, page_number)
                             if candidate:
                                 candidates.append(candidate)
@@ -1402,71 +1382,80 @@ def main():
         # Scrape multiple pages of candidate information
         all_candidates = []
         page_number = 0
-        # Set maximum pages and candidate limit based on input code
-        max_pages = 4  # Using the value from the input code
-        # MAX_CANDIDATES is already defined as 60
+        max_pages = 3  # We want exactly 3 pages
+        max_retries = 3  # Maximum number of retries per page
+        retry_delay = 10  # Seconds to wait between retries
 
         # Main scraping loop
-        while page_number < max_pages and len(all_candidates) < MAX_CANDIDATES:
+        while page_number < max_pages:
             print(f"\n==== Processing page {page_number+1} ====")
+            retry_count = 0
+            page_success = False
 
-            # Navigate to specified page
-            page_loaded = navigate_to_page(driver, page_number)
+            while retry_count < max_retries and not page_success:
+                # Navigate to specified page
+                page_loaded = navigate_to_page(driver, page_number)
 
-            # If page load fails, session might have expired, try to login again
-            if not page_loaded:
-                print("Page load failed, trying to login again...")
-                login_success = login(driver, email, password)
-                if login_success:
-                    # Try navigation again
-                    page_loaded = navigate_to_page(driver, page_number)
-                    if not page_loaded:
-                        print(
-                            f"Still unable to load page {page_number+1} after re-login, skipping"
-                        )
-                        # Try next page
-                        page_number += 1
-                        continue
-                else:
-                    print("Re-login failed, terminating program")
-                    break
+                # If page load fails, session might have expired, try to login again
+                if not page_loaded:
+                    print("Page load failed, trying to login again...")
+                    login_success = login(driver, email, password)
+                    if login_success:
+                        # Try navigation again
+                        page_loaded = navigate_to_page(driver, page_number)
+                        if not page_loaded:
+                            print(
+                                f"Still unable to load page {page_number+1} after re-login"
+                            )
+                            retry_count += 1
+                            if retry_count < max_retries:
+                                print(
+                                    f"Retrying in {retry_delay} seconds... (Attempt {retry_count + 1}/{max_retries})"
+                                )
+                                time.sleep(retry_delay)
+                            continue
+                    else:
+                        print("Re-login failed, terminating program")
+                        break
 
-            # Extract candidate information
-            candidates = extract_candidate_info_from_page(driver, page_number)
-
-            # If too few candidates retrieved (less than 5), might be a page load issue, retry once
-            if len(candidates) < 5 and page_number > 0:
-                print(
-                    f"Too few candidates extracted from page {page_number+1}, trying to reload..."
-                )
-                navigate_to_page(driver, page_number)
+                # Extract candidate information
                 candidates = extract_candidate_info_from_page(driver, page_number)
 
-                # If still too few, might have reached end of results
-                if len(candidates) < 3:
+                # Check if we got enough candidates
+                if (
+                    len(candidates) >= RESULTS_PER_PAGE * 0.8
+                ):  # At least 80% of expected candidates
+                    page_success = True
+                    # Clean data
+                    candidates = clean_data(candidates)
+                    # Add to total list
+                    all_candidates.extend(candidates)
                     print(
-                        f"Still not enough candidates after retry, might have reached end of results"
+                        f"Page {page_number+1}: Retrieved {len(candidates)} candidates, Total: {len(all_candidates)}"
                     )
-                    # Save existing results and exit loop
-                    break
-
-            # Clean data
-            candidates = clean_data(candidates)
-
-            # Add to total list
-            all_candidates.extend(candidates)
-
-            print(
-                f"Page {page_number+1}: Retrieved {len(candidates)} candidates, Total: {len(all_candidates)}/{MAX_CANDIDATES}"
-            )
-
-            # Prepare for next page
-            page_number += 1
+                    page_number += 1
+                else:
+                    print(
+                        f"Retrieved only {len(candidates)} candidates, expected {RESULTS_PER_PAGE}"
+                    )
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        print(
+                            f"Retrying in {retry_delay} seconds... (Attempt {retry_count + 1}/{max_retries})"
+                        )
+                        time.sleep(retry_delay)
+                    else:
+                        print(
+                            f"Failed to get enough candidates after {max_retries} attempts, moving to next page"
+                        )
+                        page_number += 1
 
             # Pause between pages to avoid too rapid requests
-            if page_number < max_pages and len(all_candidates) < MAX_CANDIDATES:
-                print(f"Waiting 5 seconds before loading page {page_number+1}...")
-                time.sleep(5)
+            if page_number < max_pages:
+                print(
+                    f"Waiting {retry_delay} seconds before loading page {page_number+1}..."
+                )
+                time.sleep(retry_delay)
 
         # Remove duplicates
         unique_candidates = remove_duplicates(all_candidates)
